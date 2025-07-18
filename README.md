@@ -88,8 +88,8 @@
 
 1. Скачайте скрипты:
 ```bash
-wget https://raw.githubusercontent.com/your-repo/cleanup_ubuntu.sh
-wget https://raw.githubusercontent.com/your-repo/cleanup_ubuntu_safe.sh
+wget https://raw.githubusercontent.com/Traffic-Connect/Ubuntu-Cleanup-Suite/main/cleanup_ubuntu.sh
+wget https://raw.githubusercontent.com/Traffic-Connect/Ubuntu-Cleanup-Suite/main/cleanup_ubuntu_safe.sh
 ```
 
 2. Сделайте скрипты исполняемыми:
@@ -378,11 +378,13 @@ cleanup_ubuntu_space_freed_bytes{operation="apt_cache"}
 
 ## 🤝 Вклад в проект
 
-1. Fork репозиторий
+1. [Fork репозиторий](https://github.com/Traffic-Connect/Ubuntu-Cleanup-Suite/fork)
 2. Создайте feature branch (`git checkout -b feature/amazing-feature`)
 3. Commit изменения (`git commit -m 'Add amazing feature'`)
 4. Push в branch (`git push origin feature/amazing-feature`)
-5. Откройте Pull Request
+5. Откройте [Pull Request](https://github.com/Traffic-Connect/Ubuntu-Cleanup-Suite/pulls)
+
+Подробнее см. [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## 📝 Лицензия
 
@@ -397,8 +399,9 @@ cleanup_ubuntu_space_freed_bytes{operation="apt_cache"}
 Если у вас есть вопросы или проблемы:
 1. Проверьте раздел "Устранение неполадок"
 2. Изучите соответствующую документацию
-3. Создайте issue в GitHub
+3. Создайте [issue в GitHub](https://github.com/Traffic-Connect/Ubuntu-Cleanup-Suite/issues)
 4. Опишите проблему подробно с логами
+5. Присоединитесь к [Discussions](https://github.com/Traffic-Connect/Ubuntu-Cleanup-Suite/discussions) для общих вопросов
 
 ## 🚀 Будущие улучшения
 
