@@ -1,0 +1,83 @@
+# Системные файлы
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Временные файлы
+*.tmp
+*.temp
+*.log
+*.bak
+*.backup
+
+# Логи
+*.log
+logs/
+log/
+
+# Резервные копии
+backup/
+backups/
+*.tar.gz
+*.tar.bz2
+*.zip
+
+# Конфигурационные файлы с секретами
+.env
+*.env
+config.local.*
+secrets.*
+
+# IDE и редакторы
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Кэш и временные директории
+.cache/
+tmp/
+temp/
+
+# Пользовательские данные
+user_data/
+personal/
+private/
+
+# Тестовые файлы
+test_*
+*_test
+tests/
+
+# Документация сборки
+build/
+dist/
+docs/build/
+
+# Node.js (если будет веб-интерфейс)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python (если будут Python скрипты)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Другие
+*.pid
+*.seed
+*.pid.lock 
