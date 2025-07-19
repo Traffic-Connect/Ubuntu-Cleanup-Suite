@@ -873,13 +873,13 @@ clean_wordpress_audit_logs_safe() {
         return 0
     fi
     
-    echo -e "${YELLOW}Поиск файлов wp_aiowps_audit_log.ibd в базах данных...${NC}"
+    echo -e "${YELLOW}Поиск файлов WordPress audit logs в базах данных...${NC}"
     
-    # Поиск всех файлов wp_aiowps_audit_log.ibd
-    local audit_logs=$(find "$mysql_data_dir" -name "wp_aiowps_audit_log.ibd" -type f 2>/dev/null)
+    # Поиск всех файлов WordPress audit logs (различные варианты названий)
+    local audit_logs=$(find "$mysql_data_dir" -name "*aiowps_audit_log.ibd" -type f 2>/dev/null)
     
     if [[ -z "$audit_logs" ]]; then
-        echo -e "${GREEN}Файлы wp_aiowps_audit_log.ibd не найдены${NC}"
+        echo -e "${GREEN}Файлы WordPress audit logs не найдены${NC}"
         echo ""
         return 0
     fi
@@ -887,11 +887,15 @@ clean_wordpress_audit_logs_safe() {
     local total_size=0
     local file_count=0
     
-    echo -e "${YELLOW}Найдены файлы wp_aiowps_audit_log.ibd:${NC}"
+    echo -e "${YELLOW}Найдены файлы WordPress audit logs:${NC}"
+    echo ""
     while IFS= read -r file; do
         local size=$(du -sb "$file" 2>/dev/null | cut -f1 || echo "0")
         local db_name=$(basename "$(dirname "$file")")
-        echo -e "${YELLOW}  - $db_name/wp_aiowps_audit_log.ibd ($(numfmt --to=iec $size))${NC}"
+        local file_name=$(basename "$file")
+        echo -e "${YELLOW}  📄 $db_name/$file_name${NC}"
+        echo -e "${BLUE}     Размер: $(numfmt --to=iec $size)${NC}"
+        echo ""
         total_size=$((total_size + size))
         ((file_count++))
     done <<< "$audit_logs"
@@ -914,7 +918,7 @@ clean_wordpress_audit_logs_safe() {
     fi
     
     echo ""
-    read -p "Продолжить удаление файлов wp_aiowps_audit_log.ibd? (y/N): " confirm
+    read -p "Продолжить удаление найденных файлов WordPress audit logs? (y/N): " confirm
     if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
         echo -e "${YELLOW}Удаление WordPress audit logs пропущено${NC}"
         echo ""
