@@ -876,7 +876,7 @@ clean_wordpress_audit_logs_safe() {
     echo -e "${YELLOW}Поиск файлов audit logs в базах данных...${NC}"
     
     # Поиск всех файлов audit logs (все варианты названий)
-    local audit_logs=$(find "$mysql_data_dir" -name "*audit_log.ibd" -type f 2>/dev/null)
+    local audit_logs=$(find "$mysql_data_dir" -name "*audit_log.ibd*" -type f 2>/dev/null)
     
     if [[ -z "$audit_logs" ]]; then
         echo -e "${GREEN}Файлы audit logs не найдены${NC}"
