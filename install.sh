@@ -14,6 +14,9 @@ readonly NC='\033[0m' # No Color
 # Базовый URL репозитория
 readonly BASE_URL="https://raw.githubusercontent.com/Traffic-Connect/Ubuntu-Cleanup-Suite/main"
 
+# Название папки проекта
+readonly PROJECT_DIR="ubuntu-cleanup-suite"
+
 # Список файлов для скачивания
 readonly FILES=(
     "ubuntu_cleanup.sh"
@@ -27,6 +30,7 @@ readonly FILES=(
     "SAFE_SERVER_GUIDE.md"
     "ENHANCED_FEATURES_GUIDE.md"
     "INTERACTIVE_MENU_GUIDE.md"
+    "CHANGELOG.md"
 )
 
 # Функция для логирования
@@ -47,6 +51,34 @@ check_wget() {
     if ! command -v wget &> /dev/null; then
         error "wget не установлен. Установите его командой:"
         echo "sudo apt-get update && sudo apt-get install wget"
+        exit 1
+    fi
+}
+
+# Создание папки проекта
+create_project_directory() {
+    log "=== СОЗДАНИЕ ПАПКИ ПРОЕКТА ==="
+    echo ""
+    
+    if [[ -d "$PROJECT_DIR" ]]; then
+        warn "Папка $PROJECT_DIR уже существует"
+        read -p "Перезаписать существующую папку? (y/N): " confirm
+        if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+            error "Установка отменена"
+            exit 1
+        fi
+        rm -rf "$PROJECT_DIR"
+        log "Существующая папка удалена"
+    fi
+    
+    if mkdir -p "$PROJECT_DIR"; then
+        log "✓ Папка $PROJECT_DIR создана"
+        cd "$PROJECT_DIR" || {
+            error "Не удалось перейти в папку $PROJECT_DIR"
+            exit 1
+        }
+    else
+        error "✗ Не удалось создать папку $PROJECT_DIR"
         exit 1
     fi
 }
@@ -115,7 +147,11 @@ show_usage_instructions() {
     echo ""
     log "=== ИНСТРУКЦИИ ПО ИСПОЛЬЗОВАНИЮ ==="
     echo ""
+    echo -e "${BLUE}📁 Папка проекта:${NC}"
+    echo "Все файлы скачаны в папку: $PROJECT_DIR"
+    echo ""
     echo -e "${BLUE}🚀 Быстрый старт (рекомендуется):${NC}"
+    echo "cd $PROJECT_DIR"
     echo "sudo ./ubuntu_cleanup.sh"
     echo ""
     echo -e "${BLUE}📋 Доступные скрипты:${NC}"
@@ -128,6 +164,13 @@ show_usage_instructions() {
     echo "• SAFE_SERVER_GUIDE.md - Руководство для серверов"
     echo "• ENHANCED_FEATURES_GUIDE.md - Расширенные возможности"
     echo "• INTERACTIVE_MENU_GUIDE.md - Работа с меню"
+    echo "• CHANGELOG.md - История изменений"
+    echo ""
+    echo -e "${BLUE}🔧 Примеры использования:${NC}"
+    echo "cd $PROJECT_DIR"
+    echo "sudo ./ubuntu_cleanup.sh --help"
+    echo "sudo ./cleanup_ubuntu_safe.sh --interactive"
+    echo "sudo ./cleanup_ubuntu.sh --analyze"
     echo ""
     echo -e "${YELLOW}⚠️  ВАЖНО: Все скрипты должны запускаться с правами администратора (sudo)${NC}"
     echo ""
@@ -145,6 +188,9 @@ main() {
     # Проверка wget
     check_wget
     
+    # Создание папки проекта
+    create_project_directory
+    
     # Скачивание файлов
     download_all_files
     
@@ -154,7 +200,7 @@ main() {
     # Показать инструкции
     show_usage_instructions
     
-    log "Установка завершена! Теперь вы можете использовать скрипты очистки."
+    log "Установка завершена! Все файлы находятся в папке: $PROJECT_DIR"
 }
 
 # Запуск основной функции

@@ -107,22 +107,53 @@ chmod +x install.sh
 ./install.sh
 ```
 
+Установщик автоматически:
+- ✅ Создаст папку `ubuntu-cleanup-suite`
+- ✅ Скачает все необходимые файлы
+- ✅ Настроит права доступа
+- ✅ Покажет инструкции по использованию
+
+### 📁 Структура после установки
+```
+ubuntu-cleanup-suite/
+├── ubuntu_cleanup.sh          # Универсальный скрипт (рекомендуется)
+├── cleanup_ubuntu.sh          # Стандартный скрипт
+├── cleanup_ubuntu_safe.sh     # Безопасный скрипт
+├── README.md                  # Основная документация
+├── LICENSE                    # Лицензия
+├── CHANGELOG.md              # История изменений
+├── CODE_OF_CONDUCT.md        # Кодекс поведения
+├── CONTRIBUTING.md           # Руководство по участию
+├── IMPROVEMENTS.md           # Предложения по улучшению
+├── SAFE_SERVER_GUIDE.md      # Руководство для серверов
+├── ENHANCED_FEATURES_GUIDE.md # Расширенные возможности
+└── INTERACTIVE_MENU_GUIDE.md # Работа с меню
+```
+
 ### 📦 Ручная установка
-1. Скачайте все скрипты:
+1. Создайте папку проекта:
+```bash
+mkdir ubuntu-cleanup-suite
+cd ubuntu-cleanup-suite
+```
+
+2. Скачайте все файлы:
 ```bash
 wget https://raw.githubusercontent.com/Traffic-Connect/Ubuntu-Cleanup-Suite/main/ubuntu_cleanup.sh
 wget https://raw.githubusercontent.com/Traffic-Connect/Ubuntu-Cleanup-Suite/main/cleanup_ubuntu.sh
 wget https://raw.githubusercontent.com/Traffic-Connect/Ubuntu-Cleanup-Suite/main/cleanup_ubuntu_safe.sh
+wget https://raw.githubusercontent.com/Traffic-Connect/Ubuntu-Cleanup-Suite/main/README.md
+wget https://raw.githubusercontent.com/Traffic-Connect/Ubuntu-Cleanup-Suite/main/CHANGELOG.md
 ```
 
-2. Сделайте скрипты исполняемыми:
+3. Сделайте скрипты исполняемыми:
 ```bash
 chmod +x ubuntu_cleanup.sh
 chmod +x cleanup_ubuntu.sh
 chmod +x cleanup_ubuntu_safe.sh
 ```
 
-3. Запустите с правами администратора:
+4. Запустите с правами администратора:
 ```bash
 # Универсальный скрипт (рекомендуется)
 sudo ./ubuntu_cleanup.sh
@@ -140,11 +171,14 @@ sudo ./cleanup_ubuntu_safe.sh
 
 #### Интерактивное меню (рекомендуется)
 ```bash
+cd ubuntu-cleanup-suite
 sudo ./ubuntu_cleanup.sh
 ```
 
 #### Командная строка
 ```bash
+cd ubuntu-cleanup-suite
+
 # Быстрая очистка
 sudo ./ubuntu_cleanup.sh --quick
 
@@ -168,16 +202,19 @@ sudo ./ubuntu_cleanup.sh --help
 
 #### Интерактивное меню (рекомендуется)
 ```bash
+cd ubuntu-cleanup-suite
 sudo ./cleanup_ubuntu.sh
 ```
 
 #### Автоматическая очистка
 ```bash
+cd ubuntu-cleanup-suite
 sudo ./cleanup_ubuntu.sh --auto
 ```
 
 #### Сухая прогонка (показать что будет очищено)
 ```bash
+cd ubuntu-cleanup-suite
 sudo ./cleanup_ubuntu.sh --dry-run
 ```
 
@@ -185,16 +222,19 @@ sudo ./cleanup_ubuntu.sh --dry-run
 
 #### Интерактивное меню (рекомендуется)
 ```bash
+cd ubuntu-cleanup-suite
 sudo ./cleanup_ubuntu_safe.sh
 ```
 
 #### Безопасная очистка
 ```bash
+cd ubuntu-cleanup-suite
 sudo ./cleanup_ubuntu_safe.sh --safe
 ```
 
 #### Только анализ (без удаления)
 ```bash
+cd ubuntu-cleanup-suite
 sudo ./cleanup_ubuntu_safe.sh --analyze
 ```
 
