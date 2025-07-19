@@ -305,6 +305,53 @@ clean_web_logs() {
     echo ""
 }
 
+# Полное удаление папок веб-серверов
+remove_web_server_dirs() {
+    log "=== ПОЛНОЕ УДАЛЕНИЕ ПАПОК ВЕБ-СЕРВЕРОВ ==="
+    echo ""
+    
+    echo -e "${YELLOW}⚠️  ВНИМАНИЕ: Эта операция полностью удалит папки логов Apache2 и Nginx${NC}"
+    echo -e "${YELLOW}Это может повлиять на работу веб-серверов!${NC}"
+    echo ""
+    
+    read -p "Продолжить удаление папок /var/log/apache2 и /var/log/nginx? (y/N): " confirm
+    if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+        echo -e "${YELLOW}Удаление папок веб-серверов пропущено${NC}"
+        echo ""
+        return 0
+    fi
+    
+    # Удаление папки Apache2
+    if [[ -d "/var/log/apache2" ]]; then
+        local apache_size=$(du -sb /var/log/apache2 2>/dev/null | cut -f1 || echo "0")
+        echo -e "${YELLOW}Удаление папки /var/log/apache2 (размер: $(numfmt --to=iec $apache_size))...${NC}"
+        
+        if safe_remove "/var/log/apache2" "Удаление папки Apache2 логов"; then
+            echo -e "${GREEN}✓ Папка /var/log/apache2 успешно удалена${NC}"
+        else
+            echo -e "${RED}✗ Не удалось удалить папку /var/log/apache2${NC}"
+        fi
+    else
+        echo -e "${YELLOW}Папка /var/log/apache2 не существует${NC}"
+    fi
+    
+    # Удаление папки Nginx
+    if [[ -d "/var/log/nginx" ]]; then
+        local nginx_size=$(du -sb /var/log/nginx 2>/dev/null | cut -f1 || echo "0")
+        echo -e "${YELLOW}Удаление папки /var/log/nginx (размер: $(numfmt --to=iec $nginx_size))...${NC}"
+        
+        if safe_remove "/var/log/nginx" "Удаление папки Nginx логов"; then
+            echo -e "${GREEN}✓ Папка /var/log/nginx успешно удалена${NC}"
+        else
+            echo -e "${RED}✗ Не удалось удалить папку /var/log/nginx${NC}"
+        fi
+    else
+        echo -e "${YELLOW}Папка /var/log/nginx не существует${NC}"
+    fi
+    
+    echo ""
+}
+
 # Агрессивная очистка больших логов
 clean_large_logs() {
     log "=== АГРЕССИВНАЯ ОЧИСТКА БОЛЬШИХ ЛОГОВ ==="
@@ -381,6 +428,102 @@ analyze_mysql_databases() {
     else
         warn "MySQL не установлен"
     fi
+    echo ""
+}
+
+# Очистка файлов wp_aiowps_audit_log.ibd в MySQL базах
+clean_wordpress_audit_logs() {
+    log "=== ОЧИСТКА WORDPRESS AUDIT LOGS В MYSQL ==="
+    echo ""
+    
+    if ! command -v mysql &> /dev/null; then
+        warn "MySQL не установлен, пропускаем очистку WordPress audit logs"
+        echo ""
+        return 0
+    fi
+    
+    local mysql_data_dir="/var/lib/mysql"
+    if [[ ! -d "$mysql_data_dir" ]]; then
+        warn "Директория MySQL данных не найдена: $mysql_data_dir"
+        echo ""
+        return 0
+    fi
+    
+    echo -e "${YELLOW}Поиск файлов wp_aiowps_audit_log.ibd в базах данных...${NC}"
+    
+    # Поиск всех файлов wp_aiowps_audit_log.ibd
+    local audit_logs=$(find "$mysql_data_dir" -name "wp_aiowps_audit_log.ibd" -type f 2>/dev/null)
+    
+    if [[ -z "$audit_logs" ]]; then
+        echo -e "${GREEN}Файлы wp_aiowps_audit_log.ibd не найдены${NC}"
+        echo ""
+        return 0
+    fi
+    
+    local total_size=0
+    local file_count=0
+    
+    echo -e "${YELLOW}Найдены файлы wp_aiowps_audit_log.ibd:${NC}"
+    while IFS= read -r file; do
+        local size=$(du -sb "$file" 2>/dev/null | cut -f1 || echo "0")
+        local db_name=$(basename "$(dirname "$file")")
+        echo -e "${YELLOW}  - $db_name/wp_aiowps_audit_log.ibd ($(numfmt --to=iec $size))${NC}"
+        total_size=$((total_size + size))
+        ((file_count++))
+    done <<< "$audit_logs"
+    
+    echo ""
+    echo -e "${YELLOW}Общий размер файлов: $(numfmt --to=iec $total_size)${NC}"
+    echo -e "${YELLOW}Количество файлов: $file_count${NC}"
+    echo ""
+    
+    echo -e "${YELLOW}⚠️  ВНИМАНИЕ: Удаление этих файлов может повлиять на работу WordPress сайтов!${NC}"
+    echo -e "${YELLOW}Эти файлы содержат логи безопасности плагина All In One WP Security.${NC}"
+    echo ""
+    
+    read -p "Продолжить удаление файлов wp_aiowps_audit_log.ibd? (y/N): " confirm
+    if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+        echo -e "${YELLOW}Удаление WordPress audit logs пропущено${NC}"
+        echo ""
+        return 0
+    fi
+    
+    # Остановка MySQL для безопасного удаления
+    echo -e "${YELLOW}Остановка MySQL сервиса для безопасного удаления...${NC}"
+    if systemctl stop mysql 2>/dev/null || systemctl stop mysqld 2>/dev/null; then
+        echo -e "${GREEN}✓ MySQL сервис остановлен${NC}"
+    else
+        echo -e "${RED}✗ Не удалось остановить MySQL сервис${NC}"
+        echo -e "${YELLOW}Попытка удаления без остановки сервиса...${NC}"
+    fi
+    
+    # Удаление файлов
+    local removed_count=0
+    local removed_size=0
+    
+    while IFS= read -r file; do
+        local size=$(du -sb "$file" 2>/dev/null | cut -f1 || echo "0")
+        local db_name=$(basename "$(dirname "$file")")
+        
+        if safe_remove "$file" "Удаление wp_aiowps_audit_log.ibd в базе $db_name"; then
+            ((removed_count++))
+            removed_size=$((removed_size + size))
+        fi
+    done <<< "$audit_logs"
+    
+    # Запуск MySQL обратно
+    echo -e "${YELLOW}Запуск MySQL сервиса...${NC}"
+    if systemctl start mysql 2>/dev/null || systemctl start mysqld 2>/dev/null; then
+        echo -e "${GREEN}✓ MySQL сервис запущен${NC}"
+    else
+        echo -e "${RED}✗ Не удалось запустить MySQL сервис${NC}"
+        echo -e "${YELLOW}Проверьте статус сервиса вручную: systemctl status mysql${NC}"
+    fi
+    
+    echo ""
+    echo -e "${GREEN}Очистка WordPress audit logs завершена:${NC}"
+    echo -e "${GREEN}  - Удалено файлов: $removed_count из $file_count${NC}"
+    echo -e "${GREEN}  - Освобождено места: $(numfmt --to=iec $removed_size)${NC}"
     echo ""
 }
 
@@ -920,12 +1063,14 @@ interactive_cleanup() {
     echo "9) Очистка журналов (система, веб-серверы, MySQL)"
     echo "10) Агрессивная очистка больших логов"
     echo "11) Анализ баз данных MySQL"
-    echo "12) Поиск дублирующихся файлов"
-    echo "13) Показать использование диска"
+    echo "12) Очистка WordPress audit logs (wp_aiowps_audit_log.ibd)"
+    echo "13) Полное удаление папок веб-серверов (/var/log/apache2, /var/log/nginx)"
+    echo "14) Поиск дублирующихся файлов"
+    echo "15) Показать использование диска"
     echo "0) Выход"
     echo ""
     
-    read -p "Введите номер (0-13): " choice
+    read -p "Введите номер (0-15): " choice
     
     case $choice in
         1)
@@ -992,9 +1137,15 @@ interactive_cleanup() {
             analyze_mysql_databases
             ;;
         12)
-            find_duplicate_files
+            clean_wordpress_audit_logs
             ;;
         13)
+            remove_web_server_dirs
+            ;;
+        14)
+            find_duplicate_files
+            ;;
+        15)
             show_disk_usage
             ;;
         0)
