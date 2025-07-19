@@ -276,7 +276,7 @@ clean_wordpress_audit_logs() {
     
     echo -e "${YELLOW}Поиск файлов aiowps audit logs в базах данных...${NC}"
     
-    # Поиск всех файлов aiowps audit logs (файлы, заканчивающиеся на aiowps_audit_log)
+    # Поиск всех файлов aiowps audit logs (файлы, содержащие aiowps_audit_log в названии)
     local audit_logs=$(find "$mysql_data_dir" -name "*aiowps_audit_log*" -type f 2>/dev/null)
     
     if [[ -z "$audit_logs" ]]; then
