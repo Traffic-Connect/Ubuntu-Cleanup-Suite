@@ -978,6 +978,250 @@ clean_wordpress_audit_logs_safe() {
     echo ""
 }
 
+# Функция для создания резервной копии
+create_backup_before_cleanup() {
+    log "=== СОЗДАНИЕ РЕЗЕРВНОЙ КОПИИ ==="
+    echo ""
+    
+    local backup_dir="/var/backups/system-cleanup"
+    local backup_file="$backup_dir/cleanup-backup-$(date +%Y%m%d-%H%M%S).tar.gz"
+    
+    echo -e "${YELLOW}Создание резервной копии критических данных...${NC}"
+    
+    # Создание директории для резервных копий
+    mkdir -p "$backup_dir"
+    
+    # Создание резервной копии важных конфигураций
+    tar -czf "$backup_file" \
+        /etc/apt/sources.list \
+        /etc/apt/sources.list.d \
+        /etc/crontab \
+        /etc/fstab \
+        /etc/hosts \
+        /etc/network/interfaces \
+        /etc/ssh/sshd_config \
+        2>/dev/null || true
+    
+    if [[ -f "$backup_file" ]]; then
+        local backup_size=$(du -sh "$backup_file" | cut -f1)
+        echo -e "${GREEN}✓ Резервная копия создана: $backup_file ($backup_size)${NC}"
+    else
+        echo -e "${RED}✗ Не удалось создать резервную копию${NC}"
+    fi
+    
+    echo ""
+}
+
+# Функция для проверки целостности системы
+check_system_integrity() {
+    log "=== ПРОВЕРКА ЦЕЛОСТНОСТИ СИСТЕМЫ ==="
+    echo ""
+    
+    echo -e "${BLUE}🔍 ПРОВЕРКА ФАЙЛОВ СИСТЕМЫ:${NC}"
+    
+    # Проверка целостности пакетов
+    if command -v debsums &> /dev/null; then
+        echo -e "${YELLOW}Проверка целостности пакетов...${NC}"
+        debsums -c 2>/dev/null | head -10
+    else
+        echo -e "${BLUE}debsums не установлен, пропускаем проверку${NC}"
+    fi
+    
+    echo ""
+    
+    echo -e "${BLUE}🔍 ПРОВЕРКА ПРАВ ДОСТУПА:${NC}"
+    
+    # Проверка критических файлов
+    local critical_files=("/etc/passwd" "/etc/shadow" "/etc/group" "/etc/sudoers")
+    
+    for file in "${critical_files[@]}"; do
+        if [[ -f "$file" ]]; then
+            local perms=$(stat -c "%a" "$file")
+            local owner=$(stat -c "%U:%G" "$file")
+            echo -e "   $file: $perms ($owner)"
+        fi
+    done
+    
+    echo ""
+}
+
+# Функция для оптимизации системы
+optimize_system_safe() {
+    log "=== ОПТИМИЗАЦИЯ СИСТЕМЫ ==="
+    echo ""
+    
+    echo -e "${YELLOW}Выполнение безопасных оптимизаций...${NC}"
+    
+    # Обновление базы данных locate
+    if command -v updatedb &> /dev/null; then
+        echo -e "${YELLOW}Обновление базы данных locate...${NC}"
+        updatedb 2>/dev/null || true
+        echo -e "${GREEN}База данных locate обновлена${NC}"
+    fi
+    
+    # Очистка кэша man страниц
+    if command -v mandb &> /dev/null; then
+        echo -e "${YELLOW}Очистка кэша man страниц...${NC}"
+        mandb -c 2>/dev/null || true
+        echo -e "${GREEN}Кэш man страниц очищен${NC}"
+    fi
+    
+    # Обновление кэша иконок
+    if command -v gtk-update-icon-cache &> /dev/null; then
+        echo -e "${YELLOW}Обновление кэша иконок...${NC}"
+        gtk-update-icon-cache -f -t /usr/share/icons/* 2>/dev/null || true
+        echo -e "${GREEN}Кэш иконок обновлен${NC}"
+    fi
+    
+    # Обновление кэша шрифтов
+    if command -v fc-cache &> /dev/null; then
+        echo -e "${YELLOW}Обновление кэша шрифтов...${NC}"
+        fc-cache -f -v 2>/dev/null || true
+        echo -e "${GREEN}Кэш шрифтов обновлен${NC}"
+    fi
+    
+    echo ""
+}
+
+# Функция для мониторинга в реальном времени
+monitor_system_realtime() {
+    log "=== МОНИТОРИНГ В РЕАЛЬНОМ ВРЕМЕНИ ==="
+    echo ""
+    
+    echo -e "${YELLOW}Мониторинг системы (Ctrl+C для выхода)...${NC}"
+    echo ""
+    
+    # Простой мониторинг
+    while true; do
+        clear
+        echo -e "${BLUE}=== МОНИТОРИНГ СИСТЕМЫ ===${NC}"
+        echo -e "Время: $(date '+%Y-%m-%d %H:%M:%S')"
+        echo ""
+        
+        echo -e "${GREEN}💾 ПАМЯТЬ:${NC}"
+        free -h
+        echo ""
+        
+        echo -e "${GREEN}💿 ДИСК:${NC}"
+        df -h
+        echo ""
+        
+        echo -e "${GREEN}🔥 ЗАГРУЗКА:${NC}"
+        uptime
+        echo ""
+        
+        echo -e "${GREEN}🌐 СЕТЬ:${NC}"
+        ss -tuln | grep LISTEN | head -5
+        echo ""
+        
+        sleep 5
+    done
+}
+
+# Функция для диагностики проблем
+diagnose_system_issues() {
+    log "=== ДИАГНОСТИКА ПРОБЛЕМ СИСТЕМЫ ==="
+    echo ""
+    
+    echo -e "${BLUE}🔍 ПРОВЕРКА ОСНОВНЫХ СЕРВИСОВ:${NC}"
+    
+    # Проверка systemd
+    if systemctl is-system-running &> /dev/null; then
+        echo -e "   ${GREEN}✓ Systemd работает нормально${NC}"
+    else
+        echo -e "   ${RED}✗ Проблемы с systemd${NC}"
+    fi
+    
+    # Проверка сетевых интерфейсов
+    if ip link show | grep -q "UP"; then
+        echo -e "   ${GREEN}✓ Сетевые интерфейсы активны${NC}"
+    else
+        echo -e "   ${RED}✗ Проблемы с сетью${NC}"
+    fi
+    
+    # Проверка дискового пространства
+    local disk_usage=$(df / | awk 'NR==2 {print $5}' | sed 's/%//')
+    if [[ $disk_usage -gt 90 ]]; then
+        echo -e "   ${RED}✗ Критически мало места на диске ($disk_usage%)${NC}"
+    elif [[ $disk_usage -gt 80 ]]; then
+        echo -e "   ${YELLOW}⚠ Мало места на диске ($disk_usage%)${NC}"
+    else
+        echo -e "   ${GREEN}✓ Места на диске достаточно ($disk_usage%)${NC}"
+    fi
+    
+    echo ""
+    
+    echo -e "${BLUE}🔍 ПРОВЕРКА ЛОГОВ ОШИБОК:${NC}"
+    
+    # Последние ошибки
+    journalctl -p err --since "1 hour ago" | tail -5
+    echo ""
+    
+    echo -e "${BLUE}🔍 ПРОВЕРКА ПРОЦЕССОВ:${NC}"
+    
+    # Процессы с высоким потреблением ресурсов
+    echo -e "${YELLOW}Топ процессов по CPU:${NC}"
+    ps aux --sort=-%cpu | head -5
+    echo ""
+    
+    echo -e "${YELLOW}Топ процессов по памяти:${NC}"
+    ps aux --sort=-%mem | head -5
+    echo ""
+}
+
+# Функция для экспорта отчета
+export_system_report() {
+    log "=== ЭКСПОРТ ОТЧЕТА СИСТЕМЫ ==="
+    echo ""
+    
+    local report_file="/tmp/system-report-$(date +%Y%m%d-%H%M%S).txt"
+    
+    echo -e "${YELLOW}Создание отчета системы...${NC}"
+    
+    {
+        echo "=== ОТЧЕТ СИСТЕМЫ ==="
+        echo "Дата: $(date)"
+        echo "Система: $(cat /etc/os-release | grep PRETTY_NAME | cut -d'"' -f2)"
+        echo "Ядро: $(uname -r)"
+        echo ""
+        
+        echo "=== ИСПОЛЬЗОВАНИЕ ДИСКА ==="
+        df -h
+        echo ""
+        
+        echo "=== ИСПОЛЬЗОВАНИЕ ПАМЯТИ ==="
+        free -h
+        echo ""
+        
+        echo "=== ЗАГРУЗКА СИСТЕМЫ ==="
+        uptime
+        echo ""
+        
+        echo "=== АКТИВНЫЕ СЕРВИСЫ ==="
+        systemctl list-units --state=active | head -20
+        echo ""
+        
+        echo "=== СЕТЕВЫЕ СОЕДИНЕНИЯ ==="
+        ss -tuln | grep LISTEN
+        echo ""
+        
+        echo "=== ПОСЛЕДНИЕ ОШИБКИ ==="
+        journalctl -p err --since "24 hours ago" | tail -10
+        echo ""
+        
+    } > "$report_file"
+    
+    if [[ -f "$report_file" ]]; then
+        local report_size=$(du -sh "$report_file" | cut -f1)
+        echo -e "${GREEN}✓ Отчет создан: $report_file ($report_size)${NC}"
+        echo -e "${BLUE}Для просмотра: cat $report_file${NC}"
+    else
+        echo -e "${RED}✗ Не удалось создать отчет${NC}"
+    fi
+    
+    echo ""
+}
+
 # Интерактивное меню управления
 interactive_menu() {
     while true; do
@@ -1592,246 +1836,4 @@ clean_application_cache_safe() {
     echo ""
 }
 
-# Функция для создания резервной копии перед очисткой
-create_backup_before_cleanup() {
-    log "=== СОЗДАНИЕ РЕЗЕРВНОЙ КОПИИ ==="
-    echo ""
-    
-    local backup_dir="/var/backups/system-cleanup"
-    local backup_file="$backup_dir/cleanup-backup-$(date +%Y%m%d-%H%M%S).tar.gz"
-    
-    echo -e "${YELLOW}Создание резервной копии критических данных...${NC}"
-    
-    # Создание директории для резервных копий
-    mkdir -p "$backup_dir"
-    
-    # Создание резервной копии важных конфигураций
-    tar -czf "$backup_file" \
-        /etc/apt/sources.list \
-        /etc/apt/sources.list.d \
-        /etc/crontab \
-        /etc/fstab \
-        /etc/hosts \
-        /etc/network/interfaces \
-        /etc/ssh/sshd_config \
-        2>/dev/null || true
-    
-    if [[ -f "$backup_file" ]]; then
-        local backup_size=$(du -sh "$backup_file" | cut -f1)
-        echo -e "${GREEN}✓ Резервная копия создана: $backup_file ($backup_size)${NC}"
-    else
-        echo -e "${RED}✗ Не удалось создать резервную копию${NC}"
-    fi
-    
-    echo ""
-}
-
-# Функция для проверки целостности системы
-check_system_integrity() {
-    log "=== ПРОВЕРКА ЦЕЛОСТНОСТИ СИСТЕМЫ ==="
-    echo ""
-    
-    echo -e "${BLUE}🔍 ПРОВЕРКА ФАЙЛОВ СИСТЕМЫ:${NC}"
-    
-    # Проверка целостности пакетов
-    if command -v debsums &> /dev/null; then
-        echo -e "${YELLOW}Проверка целостности пакетов...${NC}"
-        debsums -c 2>/dev/null | head -10
-    else
-        echo -e "${BLUE}debsums не установлен, пропускаем проверку${NC}"
-    fi
-    
-    echo ""
-    
-    echo -e "${BLUE}🔍 ПРОВЕРКА ПРАВ ДОСТУПА:${NC}"
-    
-    # Проверка критических файлов
-    local critical_files=("/etc/passwd" "/etc/shadow" "/etc/group" "/etc/sudoers")
-    
-    for file in "${critical_files[@]}"; do
-        if [[ -f "$file" ]]; then
-            local perms=$(stat -c "%a" "$file")
-            local owner=$(stat -c "%U:%G" "$file")
-            echo -e "   $file: $perms ($owner)"
-        fi
-    done
-    
-    echo ""
-}
-
-# Функция для оптимизации системы
-optimize_system_safe() {
-    log "=== ОПТИМИЗАЦИЯ СИСТЕМЫ ==="
-    echo ""
-    
-    echo -e "${YELLOW}Выполнение безопасных оптимизаций...${NC}"
-    
-    # Обновление базы данных locate
-    if command -v updatedb &> /dev/null; then
-        echo -e "${YELLOW}Обновление базы данных locate...${NC}"
-        updatedb 2>/dev/null || true
-        echo -e "${GREEN}База данных locate обновлена${NC}"
-    fi
-    
-    # Очистка кэша man страниц
-    if command -v mandb &> /dev/null; then
-        echo -e "${YELLOW}Очистка кэша man страниц...${NC}"
-        mandb -c 2>/dev/null || true
-        echo -e "${GREEN}Кэш man страниц очищен${NC}"
-    fi
-    
-    # Обновление кэша иконок
-    if command -v gtk-update-icon-cache &> /dev/null; then
-        echo -e "${YELLOW}Обновление кэша иконок...${NC}"
-        gtk-update-icon-cache -f -t /usr/share/icons/* 2>/dev/null || true
-        echo -e "${GREEN}Кэш иконок обновлен${NC}"
-    fi
-    
-    # Обновление кэша шрифтов
-    if command -v fc-cache &> /dev/null; then
-        echo -e "${YELLOW}Обновление кэша шрифтов...${NC}"
-        fc-cache -f -v 2>/dev/null || true
-        echo -e "${GREEN}Кэш шрифтов обновлен${NC}"
-    fi
-    
-    echo ""
-}
-
-# Функция для мониторинга в реальном времени
-monitor_system_realtime() {
-    log "=== МОНИТОРИНГ В РЕАЛЬНОМ ВРЕМЕНИ ==="
-    echo ""
-    
-    echo -e "${YELLOW}Мониторинг системы (Ctrl+C для выхода)...${NC}"
-    echo ""
-    
-    # Простой мониторинг
-    while true; do
-        clear
-        echo -e "${BLUE}=== МОНИТОРИНГ СИСТЕМЫ ===${NC}"
-        echo -e "Время: $(date '+%Y-%m-%d %H:%M:%S')"
-        echo ""
-        
-        echo -e "${GREEN}💾 ПАМЯТЬ:${NC}"
-        free -h
-        echo ""
-        
-        echo -e "${GREEN}💿 ДИСК:${NC}"
-        df -h
-        echo ""
-        
-        echo -e "${GREEN}🔥 ЗАГРУЗКА:${NC}"
-        uptime
-        echo ""
-        
-        echo -e "${GREEN}🌐 СЕТЬ:${NC}"
-        ss -tuln | grep LISTEN | head -5
-        echo ""
-        
-        sleep 5
-    done
-}
-
-# Функция для диагностики проблем
-diagnose_system_issues() {
-    log "=== ДИАГНОСТИКА ПРОБЛЕМ СИСТЕМЫ ==="
-    echo ""
-    
-    echo -e "${BLUE}🔍 ПРОВЕРКА ОСНОВНЫХ СЕРВИСОВ:${NC}"
-    
-    # Проверка systemd
-    if systemctl is-system-running &> /dev/null; then
-        echo -e "   ${GREEN}✓ Systemd работает нормально${NC}"
-    else
-        echo -e "   ${RED}✗ Проблемы с systemd${NC}"
-    fi
-    
-    # Проверка сетевых интерфейсов
-    if ip link show | grep -q "UP"; then
-        echo -e "   ${GREEN}✓ Сетевые интерфейсы активны${NC}"
-    else
-        echo -e "   ${RED}✗ Проблемы с сетью${NC}"
-    fi
-    
-    # Проверка дискового пространства
-    local disk_usage=$(df / | awk 'NR==2 {print $5}' | sed 's/%//')
-    if [[ $disk_usage -gt 90 ]]; then
-        echo -e "   ${RED}✗ Критически мало места на диске ($disk_usage%)${NC}"
-    elif [[ $disk_usage -gt 80 ]]; then
-        echo -e "   ${YELLOW}⚠ Мало места на диске ($disk_usage%)${NC}"
-    else
-        echo -e "   ${GREEN}✓ Места на диске достаточно ($disk_usage%)${NC}"
-    fi
-    
-    echo ""
-    
-    echo -e "${BLUE}🔍 ПРОВЕРКА ЛОГОВ ОШИБОК:${NC}"
-    
-    # Последние ошибки
-    journalctl -p err --since "1 hour ago" | tail -5
-    echo ""
-    
-    echo -e "${BLUE}🔍 ПРОВЕРКА ПРОЦЕССОВ:${NC}"
-    
-    # Процессы с высоким потреблением ресурсов
-    echo -e "${YELLOW}Топ процессов по CPU:${NC}"
-    ps aux --sort=-%cpu | head -5
-    echo ""
-    
-    echo -e "${YELLOW}Топ процессов по памяти:${NC}"
-    ps aux --sort=-%mem | head -5
-    echo ""
-}
-
-# Функция для экспорта отчета
-export_system_report() {
-    log "=== ЭКСПОРТ ОТЧЕТА СИСТЕМЫ ==="
-    echo ""
-    
-    local report_file="/tmp/system-report-$(date +%Y%m%d-%H%M%S).txt"
-    
-    echo -e "${YELLOW}Создание отчета системы...${NC}"
-    
-    {
-        echo "=== ОТЧЕТ СИСТЕМЫ ==="
-        echo "Дата: $(date)"
-        echo "Система: $(cat /etc/os-release | grep PRETTY_NAME | cut -d'"' -f2)"
-        echo "Ядро: $(uname -r)"
-        echo ""
-        
-        echo "=== ИСПОЛЬЗОВАНИЕ ДИСКА ==="
-        df -h
-        echo ""
-        
-        echo "=== ИСПОЛЬЗОВАНИЕ ПАМЯТИ ==="
-        free -h
-        echo ""
-        
-        echo "=== ЗАГРУЗКА СИСТЕМЫ ==="
-        uptime
-        echo ""
-        
-        echo "=== АКТИВНЫЕ СЕРВИСЫ ==="
-        systemctl list-units --state=active | head -20
-        echo ""
-        
-        echo "=== СЕТЕВЫЕ СОЕДИНЕНИЯ ==="
-        ss -tuln | grep LISTEN
-        echo ""
-        
-        echo "=== ПОСЛЕДНИЕ ОШИБКИ ==="
-        journalctl -p err --since "24 hours ago" | tail -10
-        echo ""
-        
-    } > "$report_file"
-    
-    if [[ -f "$report_file" ]]; then
-        local report_size=$(du -sh "$report_file" | cut -f1)
-        echo -e "${GREEN}✓ Отчет создан: $report_file ($report_size)${NC}"
-        echo -e "${BLUE}Для просмотра: cat $report_file${NC}"
-    else
-        echo -e "${RED}✗ Не удалось создать отчет${NC}"
-    fi
-    
-    echo ""
-} 
+ 
