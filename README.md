@@ -109,7 +109,7 @@ chmod +x install.sh
 
 Установщик автоматически:
 - ✅ Создаст папку `ubuntu-cleanup-suite`
-- ✅ Скачает все необходимые файлы
+- ✅ Скачает только необходимые файлы (скрипты + README)
 - ✅ Настроит права доступа
 - ✅ Покажет инструкции по использованию
 
@@ -119,15 +119,7 @@ ubuntu-cleanup-suite/
 ├── ubuntu_cleanup.sh          # Универсальный скрипт (рекомендуется)
 ├── cleanup_ubuntu.sh          # Стандартный скрипт
 ├── cleanup_ubuntu_safe.sh     # Безопасный скрипт
-├── README.md                  # Основная документация
-├── LICENSE                    # Лицензия
-├── CHANGELOG.md              # История изменений
-├── CODE_OF_CONDUCT.md        # Кодекс поведения
-├── CONTRIBUTING.md           # Руководство по участию
-├── IMPROVEMENTS.md           # Предложения по улучшению
-├── SAFE_SERVER_GUIDE.md      # Руководство для серверов
-├── ENHANCED_FEATURES_GUIDE.md # Расширенные возможности
-└── INTERACTIVE_MENU_GUIDE.md # Работа с меню
+└── README.md                  # Основная документация и инструкции
 ```
 
 ### 📦 Ручная установка
@@ -137,13 +129,12 @@ mkdir ubuntu-cleanup-suite
 cd ubuntu-cleanup-suite
 ```
 
-2. Скачайте все файлы:
+2. Скачайте необходимые файлы:
 ```bash
 wget https://raw.githubusercontent.com/Traffic-Connect/Ubuntu-Cleanup-Suite/main/ubuntu_cleanup.sh
 wget https://raw.githubusercontent.com/Traffic-Connect/Ubuntu-Cleanup-Suite/main/cleanup_ubuntu.sh
 wget https://raw.githubusercontent.com/Traffic-Connect/Ubuntu-Cleanup-Suite/main/cleanup_ubuntu_safe.sh
 wget https://raw.githubusercontent.com/Traffic-Connect/Ubuntu-Cleanup-Suite/main/README.md
-wget https://raw.githubusercontent.com/Traffic-Connect/Ubuntu-Cleanup-Suite/main/CHANGELOG.md
 ```
 
 3. Сделайте скрипты исполняемыми:

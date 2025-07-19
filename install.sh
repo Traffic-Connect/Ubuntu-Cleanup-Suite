@@ -23,14 +23,6 @@ readonly FILES=(
     "cleanup_ubuntu.sh"
     "cleanup_ubuntu_safe.sh"
     "README.md"
-    "LICENSE"
-    "CODE_OF_CONDUCT.md"
-    "CONTRIBUTING.md"
-    "IMPROVEMENTS.md"
-    "SAFE_SERVER_GUIDE.md"
-    "ENHANCED_FEATURES_GUIDE.md"
-    "INTERACTIVE_MENU_GUIDE.md"
-    "CHANGELOG.md"
 )
 
 # Функция для логирования
@@ -160,11 +152,7 @@ show_usage_instructions() {
     echo "• cleanup_ubuntu_safe.sh - Безопасный скрипт для серверов"
     echo ""
     echo -e "${BLUE}📖 Документация:${NC}"
-    echo "• README.md - Основная документация"
-    echo "• SAFE_SERVER_GUIDE.md - Руководство для серверов"
-    echo "• ENHANCED_FEATURES_GUIDE.md - Расширенные возможности"
-    echo "• INTERACTIVE_MENU_GUIDE.md - Работа с меню"
-    echo "• CHANGELOG.md - История изменений"
+    echo "• README.md - Основная документация и инструкции"
     echo ""
     echo -e "${BLUE}🔧 Примеры использования:${NC}"
     echo "cd $PROJECT_DIR"
