@@ -876,7 +876,8 @@ clean_wordpress_audit_logs_safe() {
     echo -e "${YELLOW}Поиск файлов aiowps audit logs в базах данных...${NC}"
     
     # Поиск всех файлов aiowps audit logs (файлы, содержащие aiowps_audit_log в названии)
-    local audit_logs=$(find "$mysql_data_dir" -name "*aiowps_audit_log*" -type f 2>/dev/null)
+    # Включаем .ibd и .frm файлы
+    local audit_logs=$(find "$mysql_data_dir" -name "*aiowps_audit_log*" -type f 2>/dev/null | sort)
     
     if [[ -z "$audit_logs" ]]; then
         echo -e "${GREEN}Файлы aiowps audit logs не найдены${NC}"
@@ -884,8 +885,12 @@ clean_wordpress_audit_logs_safe() {
         return 0
     fi
     
+    # Подсчет найденных файлов
+    local file_count=$(echo "$audit_logs" | wc -l)
+    echo -e "${YELLOW}Найдено файлов aiowps audit logs: $file_count${NC}"
+    echo ""
+    
     local total_size=0
-    local file_count=0
     
     echo -e "${YELLOW}Найдены файлы aiowps audit logs:${NC}"
     echo ""
