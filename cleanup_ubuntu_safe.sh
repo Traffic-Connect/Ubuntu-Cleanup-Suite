@@ -873,13 +873,13 @@ clean_wordpress_audit_logs_safe() {
         return 0
     fi
     
-    echo -e "${YELLOW}Поиск файлов WordPress audit logs в базах данных...${NC}"
+    echo -e "${YELLOW}Поиск файлов audit logs в базах данных...${NC}"
     
-    # Поиск всех файлов WordPress audit logs (различные варианты названий)
-    local audit_logs=$(find "$mysql_data_dir" -name "*aiowps_audit_log.ibd" -type f 2>/dev/null)
+    # Поиск всех файлов audit logs (все варианты названий)
+    local audit_logs=$(find "$mysql_data_dir" -name "*audit_log.ibd" -type f 2>/dev/null)
     
     if [[ -z "$audit_logs" ]]; then
-        echo -e "${GREEN}Файлы WordPress audit logs не найдены${NC}"
+        echo -e "${GREEN}Файлы audit logs не найдены${NC}"
         echo ""
         return 0
     fi
@@ -887,7 +887,7 @@ clean_wordpress_audit_logs_safe() {
     local total_size=0
     local file_count=0
     
-    echo -e "${YELLOW}Найдены файлы WordPress audit logs:${NC}"
+    echo -e "${YELLOW}Найдены файлы audit logs:${NC}"
     echo ""
     while IFS= read -r file; do
         local size=$(du -sb "$file" 2>/dev/null | cut -f1 || echo "0")
@@ -905,8 +905,8 @@ clean_wordpress_audit_logs_safe() {
     echo -e "${YELLOW}Количество файлов: $file_count${NC}"
     echo ""
     
-    echo -e "${PURPLE}⚠️  КРИТИЧЕСКОЕ ПРЕДУПРЕЖДЕНИЕ: Удаление этих файлов может повлиять на работу WordPress сайтов!${NC}"
-    echo -e "${PURPLE}Эти файлы содержат логи безопасности плагина All In One WP Security.${NC}"
+    echo -e "${PURPLE}⚠️  КРИТИЧЕСКОЕ ПРЕДУПРЕЖДЕНИЕ: Удаление этих файлов может повлиять на работу сайтов!${NC}"
+    echo -e "${PURPLE}Эти файлы содержат логи безопасности различных плагинов и систем.${NC}"
     echo ""
     
     # Дополнительные проверки безопасности
@@ -918,9 +918,9 @@ clean_wordpress_audit_logs_safe() {
     fi
     
     echo ""
-    read -p "Продолжить удаление найденных файлов WordPress audit logs? (y/N): " confirm
+    read -p "Продолжить удаление найденных файлов audit logs? (y/N): " confirm
     if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
-        echo -e "${YELLOW}Удаление WordPress audit logs пропущено${NC}"
+        echo -e "${YELLOW}Удаление audit logs пропущено${NC}"
         echo ""
         return 0
     fi
@@ -929,7 +929,7 @@ clean_wordpress_audit_logs_safe() {
     echo ""
     read -p "Введите 'DELETE' для подтверждения: " confirm_delete
     if [[ "$confirm_delete" != "DELETE" ]]; then
-        echo -e "${YELLOW}Удаление WordPress audit logs отменено${NC}"
+        echo -e "${YELLOW}Удаление audit logs отменено${NC}"
         echo ""
         return 0
     fi
@@ -951,7 +951,7 @@ clean_wordpress_audit_logs_safe() {
         local size=$(du -sb "$file" 2>/dev/null | cut -f1 || echo "0")
         local db_name=$(basename "$(dirname "$file")")
         
-        if safe_remove "$file" "Удаление wp_aiowps_audit_log.ibd в базе $db_name"; then
+        if safe_remove "$file" "Удаление audit log в базе $db_name"; then
             ((removed_count++))
             removed_size=$((removed_size + size))
         fi
@@ -967,7 +967,7 @@ clean_wordpress_audit_logs_safe() {
     fi
     
     echo ""
-    echo -e "${GREEN}Очистка WordPress audit logs завершена:${NC}"
+    echo -e "${GREEN}Очистка audit logs завершена:${NC}"
     echo -e "${GREEN}  - Удалено файлов: $removed_count из $file_count${NC}"
     echo -e "${GREEN}  - Освобождено места: $(numfmt --to=iec $removed_size)${NC}"
     echo ""
